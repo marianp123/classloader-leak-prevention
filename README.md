@@ -1,33 +1,54 @@
 # Classloader Leak Prevention library
-[![Build Status](https://travis-ci.org/mjiderhamn/classloader-leak-prevention.svg)](http://travis-ci.org/mjiderhamn/classloader-leak-prevention)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.jiderhamn/classloader-leak-prevention/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.jiderhamn/classloader-leak-prevention/)
+[![Build Status](https://travis-ci.org/mjiderhamn/classloader-leak-prevention.svg?branch=master)](http://travis-ci.org/mjiderhamn/classloader-leak-prevention)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.jiderhamn.classloader-leak-prevention/classloader-leak-prevention-servlet3/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.jiderhamn.classloader-leak-prevention/classloader-leak-prevention-servlet3/)
 [![License](https://img.shields.io/badge/license-Apache2-blue.svg?style=flat)](https://github.com/mjiderhamn/classloader-leak-prevention/blob/master/LICENSE.txt)
 
-If you want to avoid the dreaded `java.lang.OutOfMemoryError: Metaspace` / `PermGen space`, just include this library into your Java EE application, and add this context listener in your `web.xml`:
-
-```xml
-<listener>
-  <listener-class>se.jiderhamn.classloader.leak.prevention.ClassLoaderLeakPreventor</listener-class>
-</listener>
-```
-
-It makes sense to keep this listener "outermost" (initializing first, destroying last), so you should normally declare it before any other listeners in web.xml.
+If you want to avoid the dreaded `java.lang.OutOfMemoryError: Metaspace` / `PermGen space`, 
+just include this library into your Java EE application and it should take care of the rest!
 
 To learn more about classloader leaks, their causes, types, ways to find them and known offenders, see blog series here: http://java.jiderhamn.se/category/classloader-leaks/
 
-## Maven
-The library is available in Maven Central with the following details:
-
+## Servlet 3.0+
+In a Servlet 3.0+ environment, all you need to do is include this Maven 
+dependency in your `.war`:
 ```xml
 <dependency>
-  <groupId>se.jiderhamn</groupId>
-  <artifactId>classloader-leak-prevention</artifactId>
-  <version>1.15.2</version>
+  <groupId>se.jiderhamn.classloader-leak-prevention</groupId>
+  <artifactId>classloader-leak-prevention-servlet3</artifactId>
+  <version>2.1.0</version>
 </dependency>
 ```
 
+If you run into problems with the Servlet 3.0 module, try the Servlet 2.5 alternative below.
+Since the [Servlet spec does not guarantee the order of `ServletContainerInitializer`s](https://java.net/jira/browse/SERVLET_SPEC-79),
+it means this library may not initialize first and clean up last in case you have other Servlet 3.0 dependencies, which
+could lead to unexpected behaviour.
+
+## Servlet 2.5 (and earlier)
+For Servlet 2.5 (and earlier) environments, you need to use a different
+Maven dependency (notice the difference in `artifactId`):
+```xml
+<dependency>
+  <groupId>se.jiderhamn.classloader-leak-prevention</groupId>
+  <artifactId>classloader-leak-prevention-servlet</artifactId>
+  <version>2.1.0</version>
+</dependency>
+```
+
+You also have to add this to your `web.xml`:
+```xml
+<listener>
+  <listener-class>se.jiderhamn.classloader.leak.prevention.ClassLoaderLeakPreventorListener</listener-class>
+</listener>
+```
+_Note that the name of the listener class has changed since 1.x!_
+
+It makes sense to keep this listener "outermost" (initializing first, 
+destroying last), so you should normally declare it before any other 
+listeners in `web.xml`.
+
 ## Configuration
-The context listener has a number of settings that can be configured with context parameters in <code>web.xml</code>:
+The context listener used in both cases has a number of settings that can be configured with context parameters in `web.xml`:
  
 ```xml
 <context-param>
@@ -84,7 +105,11 @@ The context listener has a number of settings that can be configured with contex
 
 ## Classloader leak detection / test framework
 
-The test framework now has its own Maven module and its own documentation, see [classloader-leak-test-framework](classloader-leak-test-framework)
+The test framework has its own Maven module and its own documentation, see [classloader-leak-test-framework](classloader-leak-test-framework).
+
+## Integration
+
+For non-servlet environments, please see the documentation for the [core module](classloader-leak-prevention/classloader-leak-prevention-core).
 
 ## License
 
